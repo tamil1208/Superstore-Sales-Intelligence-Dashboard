@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/29924988/README.md)
 # 📊 Superstore Sales Intelligence Dashboard
 
 A multi-page Streamlit web app built on the Superstore Sales dataset (2015–2018), covering sales analytics, forecasting, anomaly detection, and product demand segmentation.
