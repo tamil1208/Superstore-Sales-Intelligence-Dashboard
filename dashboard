@@ -1,7 +1,0 @@
-cd dashboard
-git init
-git add -A
-git commit -m "Task 7: Superstore Streamlit dashboard"
-git branch -M main
-git remote add origin https://github.com/tamil1208/superstore-dashboard.git
-git push -u origin main
