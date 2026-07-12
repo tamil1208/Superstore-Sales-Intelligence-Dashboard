@@ -178,8 +178,11 @@ inside the `images/` folder and reference them here.
 
 Example:
 
-```markdown
-![Dashboard](images/dashboard.png)
+Dashboard Preview
+
+![Dashboard](Dashboard.jpg)
+
+*Interactive Sales Intelligence Dashboard built with Streamlit, featuring KPI cards, sales trends, forecasting, anomaly detection, and demand segmentation.*
 ```
 
 ---
