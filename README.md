@@ -6,7 +6,7 @@ An end-to-end **Sales Forecasting and Demand Intelligence System** built using *
 
 ---
 
-## 🌐 Live Dashboard
+## 🌐 Live Dashboard 
 
 🚀 Explore the interactive dashboard here:
 
