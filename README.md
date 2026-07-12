@@ -218,8 +218,8 @@ Dashboard Preview
 **Tamilarasan P**
 
 - GitHub: https://github.com/tamil1208
-- LinkedIn: *(Add your LinkedIn profile URL)*
-- Email: *(Add your email address)*
+- LinkedIn: https://www.linkedin.com/in/tamilarasan-a2466b274/
+- Email: tamilarsan538@gmail.com
 
 ---
 
