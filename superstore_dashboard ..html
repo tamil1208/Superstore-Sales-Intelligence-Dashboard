@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superstore Sales Forecasting Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  /* ── THEME TOKENS ── */
+  :root {
+    --bg:#0a0f1e; --panel:#111827; --panel2:#1a2236; --border:#1e2d4a;
+    --accent:#3b82f6; --accent2:#06b6d4; --accent3:#8b5cf6;
+    --green:#10b981; --amber:#f59e0b; --red:#ef4444;
+    --text:#f1f5f9; --muted:#94a3b8; --subtle:#475569;
+    --shadow:0 2px 14px rgba(0,0,0,0.45);
+    --grid:#1e2d4a; --chart-text:#94a3b8;
+  }
+  html.light {
+    --bg:#f1f5f9; --panel:#ffffff; --panel2:#f8fafc; --border:#e2e8f0;
+    --accent:#2563eb; --accent2:#0891b2; --accent3:#7c3aed;
+    --green:#059669; --amber:#d97706; --red:#dc2626;
+    --text:#0f172a; --muted:#64748b; --subtle:#94a3b8;
+    --shadow:0 2px 14px rgba(0,0,0,0.08);
+    --grid:#e2e8f0; --chart-text:#64748b;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--text);
+    min-height:100vh; font-size:14px;
+    transition:background .3s,color .3s;
+  }
+
+  /* ── LAYOUT ── */
+  .layout{display:flex;min-height:100vh;}
+
+  /* ── SIDEBAR ── */
+  .sidebar{
+    width:210px; background:var(--panel);
+    border-right:1px solid var(--border);
+    padding:0; position:fixed; top:0;left:0;bottom:0;
+    z-index:100; display:flex; flex-direction:column;
+    box-shadow:var(--shadow);
+    transition:background .3s,border-color .3s;
+  }
+  .sidebar-brand{
+    padding:22px 20px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .sidebar-brand .logo{
+    font-size:17px; font-weight:800; letter-spacing:-.02em;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .sidebar-brand .sub{
+    color:var(--muted); font-size:10.5px; margin-top:3px;
+    letter-spacing:.06em; text-transform:uppercase;
+  }
+  nav{padding:10px 0;}
+  .nav-item{
+    display:flex; align-items:center;
+    padding:11px 20px; cursor:pointer;
+    color:var(--muted); border-left:3px solid transparent;
+    font-size:13px; font-weight:500;
+    transition:all .15s; user-select:none;
+  }
+  .nav-item:hover{color:var(--text);background:rgba(99,102,241,.06);}
+  .nav-item.active{
+    color:var(--accent); border-left-color:var(--accent);
+    background:rgba(99,102,241,.08);
+  }
+
+  /* ── THEME TOGGLE ── */
+  .theme-section{
+    margin-top:auto;
+    border-top:1px solid var(--border);
+    padding:14px 20px;
+  }
+  .theme-row{
+    display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; user-select:none;
+  }
+  .theme-label{
+    font-size:12px; font-weight:600; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.06em;
+  }
+  .toggle-pill{
+    width:42px; height:24px; border-radius:24px;
+    background:var(--border); position:relative;
+    transition:background .3s; cursor:pointer; flex-shrink:0;
+    border:none; outline:none;
+  }
+  html.light .toggle-pill{background:var(--accent);}
+  .toggle-knob{
+    position:absolute; top:3px; left:3px;
+    width:18px; height:18px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 5px rgba(0,0,0,.3);
+    transition:transform .3s;
+  }
+  html.light .toggle-knob{transform:translateX(18px);}
+  .theme-icons{display:flex;gap:4px;align-items:center;font-size:13px;}
+
+  .sidebar-footer{
+    padding:0 20px 16px;
+    color:var(--subtle); font-size:10.5px; line-height:1.7;
+  }
+
+  /* ── MAIN ── */
+  .main{margin-left:210px;flex:1;padding:26px;min-height:100vh;}
+
+  /* ── PAGES ── */
+  .page{display:none;} .page.active{display:block;}
+
+  /* ── PAGE HEADER ── */
+  .page-header{margin-bottom:22px;}
+  .page-header h1{font-size:23px;font-weight:700;letter-spacing:-.02em;}
+  .page-header p{color:var(--muted);margin-top:4px;font-size:13px;}
+
+  /* ── KPI ROW ── */
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .kpi{
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; padding:18px; position:relative; overflow:hidden;
+    box-shadow:var(--shadow); transition:background .3s,border-color .3s;
+  }
+  .kpi::before{
+    content:''; position:absolute; top:0;left:0;right:0; height:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+  }
+  .kpi-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;}
+  .kpi-value{font-size:26px;font-weight:800;margin-top:6px;letter-spacing:-.02em;}
+  .kpi-sub{color:var(--muted);font-size:11.5px;margin-top:3px;}
+
+  /* ── PANELS ── */
+  .chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .panel,.panel-wide{
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; padding:18px;
+    box-shadow:var(--shadow); transition:background .3s,border-color .3s;
+  }
+  .panel-wide{margin-bottom:16px;}
+  .panel-title{
+    font-size:13.5px; font-weight:700; color:var(--text);
+    margin-bottom:14px; display:flex; align-items:center; gap:8px;
+  }
+  .badge{
+    font-size:10px; padding:2px 8px; border-radius:20px; font-weight:600;
+    background:rgba(59,130,246,.15); color:var(--accent);
+    text-transform:uppercase; letter-spacing:.05em;
+  }
+  .badge.green{background:rgba(16,185,129,.15);color:var(--green);}
+  .badge.amber{background:rgba(245,158,11,.15);color:var(--amber);}
+  .badge.red{background:rgba(239,68,68,.15);color:var(--red);}
+  .badge.purple{background:rgba(139,92,246,.15);color:var(--accent3);}
+  .chart-wrap{position:relative;}
+
+  /* ── CONTROLS ── */
+  .controls-row{display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap;align-items:flex-end;}
+  .ctrl-group{display:flex;flex-direction:column;gap:6px;}
+  .ctrl-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;}
+  select{
+    background:var(--panel2); border:1px solid var(--border);
+    color:var(--text); border-radius:8px; padding:8px 14px;
+    font-size:13px; cursor:pointer; outline:none;
+    transition:border-color .15s,background .3s;
+    font-family:inherit;
+  }
+  select:hover,select:focus{border-color:var(--accent);}
+  .btn-group{display:flex;gap:6px;}
+  .btn-group button{
+    background:var(--panel2); border:1px solid var(--border);
+    color:var(--text); border-radius:8px; padding:7px 14px;
+    font-size:12px; font-weight:600; cursor:pointer;
+    transition:all .15s; font-family:inherit;
+  }
+  .btn-group button.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn-group button:hover:not(.active){border-color:var(--accent);}
+
+  /* ── METRIC CARDS ── */
+  .metrics-row{display:flex;gap:14px;margin-bottom:16px;}
+  .metric-card{
+    background:var(--panel2); border:1px solid var(--border);
+    border-radius:10px; padding:14px 18px; flex:1; text-align:center;
+    transition:background .3s;
+  }
+  .metric-card .m-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em;}
+  .metric-card .m-value{font-size:20px;font-weight:800;margin-top:4px;color:var(--accent);}
+
+  /* ── TABLE ── */
+  .table-scroll{overflow-x:auto;}
+  .data-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .data-table th{
+    text-align:left;padding:10px 14px;color:var(--muted);
+    font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+    border-bottom:1px solid var(--border);font-weight:600;
+    background:var(--panel2); transition:background .3s;
+  }
+  .data-table td{
+    padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);
+    transition:background .1s;
+  }
+  .data-table tr:hover td{background:rgba(59,130,246,.04);}
+  .data-table tr:last-child td{border-bottom:none;}
+
+  /* ── BADGES ── */
+  .cluster-badge{
+    display:inline-flex;align-items:center;padding:3px 10px;
+    border-radius:20px;font-size:11px;font-weight:600;
+  }
+  .cluster-badge.c0{background:rgba(245,158,11,.15);color:var(--amber);}
+  .cluster-badge.c1{background:rgba(100,116,139,.15);color:var(--muted);}
+  .cluster-badge.c2{background:rgba(16,185,129,.15);color:var(--green);}
+  .cluster-badge.c3{background:rgba(239,68,68,.15);color:var(--red);}
+
+  /* ── ANOMALY ── */
+  .anom-alert{
+    background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);
+    border-radius:10px;padding:14px 18px;margin-bottom:14px;
+    display:flex;align-items:flex-start;gap:12px;
+  }
+  .anom-alert .anom-title{font-weight:700;color:var(--red);font-size:14px;}
+  .anom-alert .anom-desc{color:var(--muted);font-size:13px;margin-top:3px;}
+  .anomaly-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+  .anomaly-dot.flag{background:var(--red);box-shadow:0 0 6px var(--red);}
+
+  /* ── MODEL COMPARE ── */
+  .model-compare{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+  .model-card{
+    background:var(--panel2);border:1px solid var(--border);
+    border-radius:10px;padding:16px;position:relative;
+    transition:background .3s;
+  }
+  .model-card.winner{border-color:var(--green);background:rgba(16,185,129,.05);}
+  .model-card.winner::before{
+    content:'PRODUCTION';position:absolute;top:-10px;left:50%;
+    transform:translateX(-50%);background:var(--green);color:#fff;
+    font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;
+    letter-spacing:.08em;white-space:nowrap;
+  }
+  .model-name{font-size:14px;font-weight:700;margin-bottom:12px;}
+  .model-stat{display:flex;justify-content:space-between;margin-bottom:6px;}
+  .model-stat .sl{color:var(--muted);font-size:12px;}
+  .model-stat .sv{font-weight:600;font-size:13px;}
+  .sv.good{color:var(--green);} .sv.mid{color:var(--amber);} .sv.bad{color:var(--red);}
+
+  /* ── FORECAST TABLE ── */
+  .fc-table{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;}
+  .fc-cell{
+    background:var(--panel2);border:1px solid var(--border);
+    border-radius:8px;padding:12px;text-align:center;transition:background .3s;
+  }
+  .fc-cell .fc-month{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;}
+  .fc-cell .fc-val{font-size:17px;font-weight:800;color:var(--green);margin-top:4px;}
+
+  /* ── REC BOX ── */
+  .rec-box{
+    background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25);
+    border-radius:10px;padding:14px 18px;margin-top:16px;
+  }
+  .rec-box .rt{font-weight:700;color:var(--green);margin-bottom:5px;font-size:13.5px;}
+  .rec-box .rd{color:var(--muted);font-size:13px;line-height:1.6;}
+
+  /* ── SCATTER LEGEND ── */
+  .scatter-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+  .legend-dot{width:10px;height:10px;border-radius:50%;}
+
+  @media(max-width:900px){
+    .sidebar{width:180px;} .main{margin-left:180px;padding:14px;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .chart-grid-2,.model-compare{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">Superstore Analytics</div>
+      <div class="sub">Sales Dashboard · Task 7</div>
+    </div>
+
+    <nav>
+      <div class="nav-item active" onclick="showPage('overview',this)">Sales Overview</div>
+      <div class="nav-item" onclick="showPage('forecast',this)">Forecast Explorer</div>
+      <div class="nav-item" onclick="showPage('anomaly',this)">Anomaly Report</div>
+      <div class="nav-item" onclick="showPage('segments',this)">Demand Segments</div>
+    </nav>
+
+    <div class="theme-section">
+      <div class="theme-row" onclick="toggleTheme()">
+        <span class="theme-label" id="themeLabel">Light Mode</span>
+        <div class="theme-icons">
+          <span id="themeIcon">☀️</span>
+          <button class="toggle-pill" onclick="toggleTheme();event.stopPropagation()">
+            <div class="toggle-knob"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      Superstore · 2015–2018<br>
+      9,800 orders · 17 sub-categories<br>
+      SARIMA · Prophet · XGBoost
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- PAGE 1 — SALES OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <h1>Sales Overview Dashboard</h1>
+        <p>Total performance across 2015–2018 by year, month, region and category</p>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Total Revenue</div>
+          <div class="kpi-value">$2.26M</div>
+          <div class="kpi-sub">Across all 4 years</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Total Orders</div>
+          <div class="kpi-value">5,009</div>
+          <div class="kpi-sub">Unique order IDs</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Avg Order Value</div>
+          <div class="kpi-value">$458</div>
+          <div class="kpi-sub">Per order</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Best Year</div>
+          <div class="kpi-value">2018</div>
+          <div class="kpi-sub">$722K — +20% vs 2017</div>
+        </div>
+      </div>
+
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">Total Sales by Year <span class="badge">Annual</span></div>
+          <div class="chart-wrap" style="height:230px"><canvas id="yearlyBar"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Monthly Sales Trend <span class="badge">2015–2018</span></div>
+          <div class="chart-wrap" style="height:230px"><canvas id="monthlyLine"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">Sales by Region <span class="badge">4 Regions</span></div>
+          <div class="chart-wrap" style="height:230px"><canvas id="regionBar"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Sales by Category <span class="badge">3 Categories</span></div>
+          <div class="chart-wrap" style="height:230px"><canvas id="categoryDonut"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel-wide">
+        <div class="panel-title">Sales by Sub-Category <span class="badge">17 Sub-Categories</span></div>
+        <div class="chart-wrap" style="height:340px"><canvas id="subcatBar"></canvas></div>
+      </div>
+    </div>
+
+    <!-- PAGE 2 — FORECAST EXPLORER -->
+    <div class="page" id="page-forecast">
+      <div class="page-header">
+        <h1>Forecast Explorer</h1>
+        <p>XGBoost (best model) — walk-forward lag-feature forecasting per Category / Region</p>
+      </div>
+
+      <div class="controls-row">
+        <div class="ctrl-group">
+          <div class="ctrl-label">Dimension</div>
+          <select id="dimSelect" onchange="onDimChange()">
+            <option value="Category">Category</option>
+            <option value="Region">Region</option>
+          </select>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label">Segment</div>
+          <select id="segSelect" onchange="updateForecast()">
+            <option>Furniture</option>
+            <option>Office Supplies</option>
+            <option>Technology</option>
+          </select>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label">Forecast Horizon</div>
+          <div class="btn-group">
+            <button onclick="setHorizon(1,this)">1 Month</button>
+            <button onclick="setHorizon(2,this)">2 Months</button>
+            <button class="active" onclick="setHorizon(3,this)">3 Months</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-card"><div class="m-label">MAE</div><div class="m-value" id="fcMAE">—</div></div>
+        <div class="metric-card"><div class="m-label">RMSE</div><div class="m-value" id="fcRMSE">—</div></div>
+        <div class="metric-card"><div class="m-label">Model</div><div class="m-value" style="font-size:14px;color:var(--green)">XGBoost</div></div>
+      </div>
+
+      <div class="panel-wide">
+        <div class="panel-title">Historical + Forecast <span class="badge green">XGBoost</span></div>
+        <div class="chart-wrap" style="height:300px"><canvas id="fcChart"></canvas></div>
+      </div>
+      <div class="panel-wide">
+        <div class="panel-title">Forecasted Values</div>
+        <div class="fc-table" id="fcTable"></div>
+      </div>
+
+      <div class="panel-wide">
+        <div class="panel-title">Overall Model Comparison <span class="badge">Holdout · Oct–Dec 2018</span></div>
+        <div class="model-compare">
+          <div class="model-card">
+            <div class="model-name">SARIMA</div>
+            <div class="model-stat"><span class="sl">MAE</span><span class="sv mid">$19,299</span></div>
+            <div class="model-stat"><span class="sl">RMSE</span><span class="sv mid">$20,206</span></div>
+            <div class="model-stat"><span class="sl">MAPE</span><span class="sv mid">20.36%</span></div>
+            <div class="model-stat"><span class="sl">Order</span><span class="sv" style="font-size:11px;color:var(--muted)">(0,1,1)(0,1,1)[12]</span></div>
+          </div>
+          <div class="model-card">
+            <div class="model-name">Prophet</div>
+            <div class="model-stat"><span class="sl">MAE</span><span class="sv bad">$21,672</span></div>
+            <div class="model-stat"><span class="sl">RMSE</span><span class="sv bad">$22,618</span></div>
+            <div class="model-stat"><span class="sl">MAPE</span><span class="sv bad">24.43%</span></div>
+            <div class="model-stat"><span class="sl">Config</span><span class="sv" style="font-size:11px;color:var(--muted)">Multiplicative yearly</span></div>
+          </div>
+          <div class="model-card winner">
+            <div class="model-name">XGBoost</div>
+            <div class="model-stat"><span class="sl">MAE</span><span class="sv good">$16,977</span></div>
+            <div class="model-stat"><span class="sl">RMSE</span><span class="sv good">$20,558</span></div>
+            <div class="model-stat"><span class="sl">MAPE</span><span class="sv good">16.72%</span></div>
+            <div class="model-stat"><span class="sl">Features</span><span class="sv" style="font-size:11px;color:var(--muted)">lag1-3, roll3, month/q/s</span></div>
+          </div>
+        </div>
+        <div class="rec-box">
+          <div class="rt">Recommended for Production: XGBoost</div>
+          <div class="rd">Lowest MAE ($16,977 vs $19,300 SARIMA) and MAPE (16.7% vs 20.4% SARIMA). RMSE competitive within 2% of SARIMA. Scales cleanly to per-Category and per-Region forecasting without reparametrization.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3 — ANOMALY REPORT -->
+    <div class="page" id="page-anomaly">
+      <div class="page-header">
+        <h1>Anomaly Report</h1>
+        <p>Seasonal decomposition residuals (additive, period=12) · z-score threshold |z| &gt; 2.0</p>
+      </div>
+
+      <div class="anom-alert">
+        <div>
+          <div class="anom-title">2 Anomalies Detected in 48 Months (4.2%)</div>
+          <div class="anom-desc">May 2017 and November 2018 show unusual sales spikes beyond seasonal expectations. Both are positive — revenue peaks, not drops.</div>
+        </div>
+      </div>
+
+      <div class="panel-wide">
+        <div class="panel-title">Monthly Sales — Anomalies Highlighted <span class="badge red">2 Flagged</span></div>
+        <div class="chart-wrap" style="height:300px"><canvas id="anomChart"></canvas></div>
+      </div>
+
+      <div class="panel-wide">
+        <div class="panel-title">Detected Anomaly Dates <span class="badge red">z-score &gt; 2.0</span></div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Status</th><th>Date</th><th>Monthly Sales</th><th>Z-Score</th><th>Interpretation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="anomaly-dot flag"></span>Anomaly</td>
+                <td><strong>May 2017</strong></td>
+                <td>$56,656.91</td>
+                <td style="color:var(--red)">+2.02</td>
+                <td>Spike above seasonal trend — unusual mid-year peak</td>
+              </tr>
+              <tr>
+                <td><span class="anomaly-dot flag"></span>Anomaly</td>
+                <td><strong>Nov 2018</strong></td>
+                <td>$117,938.16</td>
+                <td style="color:var(--red)">+2.16</td>
+                <td>Year-end Q4 peak far above expected — strongest month on record</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">Z-Score Distribution <span class="badge">All 48 Months</span></div>
+          <div class="chart-wrap" style="height:220px"><canvas id="zscoreBar"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Monthly Seasonal Pattern <span class="badge amber">Avg by Month</span></div>
+          <div class="chart-wrap" style="height:220px"><canvas id="seasonalRadar"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 4 — DEMAND SEGMENTS -->
+    <div class="page" id="page-segments">
+      <div class="page-header">
+        <h1>Product Demand Segments</h1>
+        <p>K-Means clustering (k=4, silhouette=0.464) on total sales, avg monthly, volatility (CV) and trend slope</p>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Core High-Demand Growth</div>
+          <div class="kpi-value" style="color:var(--green)">6</div>
+          <div class="kpi-sub">Chairs, Phones, Storage, Tables, Accessories, Binders</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Stable Low-Demand</div>
+          <div class="kpi-value" style="color:var(--muted)">8</div>
+          <div class="kpi-sub">Appliances, Paper, Furnishings, Art + 4 more</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Niche High-Growth</div>
+          <div class="kpi-value" style="color:var(--amber)">1</div>
+          <div class="kpi-sub">Copiers — high value, high volatility</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Volatile Low-Growth</div>
+          <div class="kpi-value" style="color:var(--red)">2</div>
+          <div class="kpi-sub">Machines, Supplies — monitor closely</div>
+        </div>
+      </div>
+
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">Cluster Map — Avg Sales vs Volatility <span class="badge purple">k=4</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="scatterChart"></canvas></div>
+          <div class="scatter-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Niche High-Growth</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--muted)"></div>Stable Low-Demand</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Core High-Demand Growth</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Volatile Low-Growth</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Total Sales by Cluster <span class="badge purple">Revenue Share</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="clusterDonut"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel-wide">
+        <div class="panel-title">Sub-Category Demand Cluster Mapping <span class="badge">17 Sub-Categories</span></div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Sub-Category</th><th>Cluster</th><th>Total Sales</th>
+                <th>Avg Monthly</th><th>Volatility (CV)</th><th>Trend Slope</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="clusterTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const D = {"monthly_labels":["Jan 2015","Feb 2015","Mar 2015","Apr 2015","May 2015","Jun 2015","Jul 2015","Aug 2015","Sep 2015","Oct 2015","Nov 2015","Dec 2015","Jan 2016","Feb 2016","Mar 2016","Apr 2016","May 2016","Jun 2016","Jul 2016","Aug 2016","Sep 2016","Oct 2016","Nov 2016","Dec 2016","Jan 2017","Feb 2017","Mar 2017","Apr 2017","May 2017","Jun 2017","Jul 2017","Aug 2017","Sep 2017","Oct 2017","Nov 2017","Dec 2017","Jan 2018","Feb 2018","Mar 2018","Apr 2018","May 2018","Jun 2018","Jul 2018","Aug 2018","Sep 2018","Oct 2018","Nov 2018","Dec 2018"],"monthly_sales":[14205.71,4519.89,55205.8,27906.85,23644.3,34322.94,33781.54,27117.54,81623.53,31453.39,77907.66,68167.06,18066.96,11951.41,32339.32,34154.47,29959.53,23599.37,28608.26,36818.34,63133.61,31011.74,75249.4,74543.6,18542.49,22978.81,51165.06,38679.77,56656.91,39724.49,38320.78,30542.2,69193.39,59583.03,79066.5,95739.12,43476.47,19921.0,58863.41,35541.91,43825.98,48190.73,44825.1,62837.85,86152.89,77448.13,117938.15,83030.39],"yearly_labels":[2015,2016,2017,2018],"yearly_sales":[479856.21,459436.01,600192.55,722052.02],"reg_total":{"Central":492646.91,"East":669518.73,"South":389151.46,"West":710219.68},"cat_total":{"Furniture":728658.58,"Office Supplies":705422.33,"Technology":827455.87},"anom_flags":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false],"clusters":[{"Sub-Category":"Accessories","cluster_name":"Core High-Demand Growth","total_sales":164187,"avg_monthly":3421,"volatility_cv":0.754,"trend_slope":98.28},{"Sub-Category":"Appliances","cluster_name":"Stable Low-Demand","total_sales":104618,"avg_monthly":2180,"volatility_cv":0.836,"trend_slope":68.43},{"Sub-Category":"Art","cluster_name":"Stable Low-Demand","total_sales":26705,"avg_monthly":556,"volatility_cv":0.594,"trend_slope":9.0},{"Sub-Category":"Binders","cluster_name":"Core High-Demand Growth","total_sales":200029,"avg_monthly":4167,"volatility_cv":0.923,"trend_slope":93.23},{"Sub-Category":"Bookcases","cluster_name":"Stable Low-Demand","total_sales":113813,"avg_monthly":2371,"volatility_cv":0.94,"trend_slope":31.36},{"Sub-Category":"Chairs","cluster_name":"Core High-Demand Growth","total_sales":322823,"avg_monthly":6725,"volatility_cv":0.655,"trend_slope":94.63},{"Sub-Category":"Copiers","cluster_name":"Niche High-Growth","total_sales":146248,"avg_monthly":3047,"volatility_cv":1.631,"trend_slope":134.7},{"Sub-Category":"Envelopes","cluster_name":"Stable Low-Demand","total_sales":16128,"avg_monthly":336,"volatility_cv":0.697,"trend_slope":1.31},{"Sub-Category":"Fasteners","cluster_name":"Stable Low-Demand","total_sales":3002,"avg_monthly":63,"volatility_cv":0.785,"trend_slope":1.18},{"Sub-Category":"Furnishings","cluster_name":"Stable Low-Demand","total_sales":89212,"avg_monthly":1859,"volatility_cv":0.732,"trend_slope":46.44},{"Sub-Category":"Labels","cluster_name":"Stable Low-Demand","total_sales":12348,"avg_monthly":257,"volatility_cv":0.869,"trend_slope":3.8},{"Sub-Category":"Machines","cluster_name":"Volatile Low-Growth","total_sales":189239,"avg_monthly":3942,"volatility_cv":1.367,"trend_slope":-9.2},{"Sub-Category":"Paper","cluster_name":"Stable Low-Demand","total_sales":76828,"avg_monthly":1601,"volatility_cv":0.64,"trend_slope":40.55},{"Sub-Category":"Phones","cluster_name":"Core High-Demand Growth","total_sales":327782,"avg_monthly":6829,"volatility_cv":0.593,"trend_slope":103.45},{"Sub-Category":"Storage","cluster_name":"Core High-Demand Growth","total_sales":219343,"avg_monthly":4570,"volatility_cv":0.618,"trend_slope":79.68},{"Sub-Category":"Supplies","cluster_name":"Volatile Low-Growth","total_sales":46420,"avg_monthly":967,"volatility_cv":2.026,"trend_slope":8.34},{"Sub-Category":"Tables","cluster_name":"Core High-Demand Growth","total_sales":202811,"avg_monthly":4225,"volatility_cv":0.763,"trend_slope":83.13}],"cat_seg":{"Furniture":{"history_labels":["2015-01","2015-02","2015-03","2015-04","2015-05","2015-06","2015-07","2015-08","2015-09","2015-10","2015-11","2015-12","2016-01","2016-02","2016-03","2016-04","2016-05","2016-06","2016-07","2016-08","2016-09","2016-10","2016-11","2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12"],"history_sales":[6217,1840,14243,7945,6913,13145,10821,7125,23816,12304,21471,30637,11740,3134,8723,10476,9375,7541,13667,9639,25085,11664,30198,22812,7623,3926,12273,13212,14893,12451,12570,11910,26755,11813,31784,36605,5930,6774,10893,9066,16958,17032,11376,15419,28517,21884,37057,31407],"future_labels":["2019-01","2019-02","2019-03"],"future_fc":[8655,6764,9738],"MAE":6362,"RMSE":6549},"Office Supplies":{"history_labels":["2015-01","2015-02","2015-03","2015-04","2015-05","2015-06","2015-07","2015-08","2015-09","2015-10","2015-11","2015-12","2016-01","2016-02","2016-03","2016-04","2016-05","2016-06","2016-07","2016-08","2016-09","2016-10","2016-11","2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12"],"history_sales":[4845,1072,8602,10989,7132,12742,15121,11055,27423,7211,26363,16956,1809,5368,13473,12518,8942,9623,4706,11735,19031,8642,21178,16099,5300,6794,17325,10577,12932,10902,12904,8960,23013,16237,20142,37333,21053,7378,14541,14215,13494,14221,10239,29800,31608,22708,31472,29638],"future_labels":["2019-01","2019-02","2019-03"],"future_fc":[16971,10548,19985],"MAE":5958,"RMSE":6662},"Technology":{"history_labels":["2015-01","2015-02","2015-03","2015-04","2015-05","2015-06","2015-07","2015-08","2015-09","2015-10","2015-11","2015-12","2016-01","2016-02","2016-03","2016-04","2016-05","2016-06","2016-07","2016-08","2016-09","2016-10","2016-11","2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12"],"history_sales":[3143,1609,32360,8973,9600,8436,7839,8937,30384,11938,30073,20573,4518,3449,10144,11161,11643,6435,10235,15445,19017,10705,23874,35632,5620,12259,21568,14891,28833,16372,12847,9672,19425,31533,27141,21801,16493,5768,33429,12261,13375,16937,23210,17619,26029,32856,49409,21985],"future_labels":["2019-01","2019-02","2019-03"],"future_fc":[15611,17826,16093],"MAE":10895,"RMSE":13742}},"reg_seg":{"Central":{"history_labels":["2015-01","2015-02","2015-03","2015-04","2015-05","2015-06","2015-07","2015-08","2015-09","2015-10","2015-11","2015-12","2016-01","2016-02","2016-03","2016-04","2016-05","2016-06","2016-07","2016-08","2016-09","2016-10","2016-11","2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12"],"history_sales":[1534,1233,5828,3712,4045,9374,6741,3022,34255,8966,13904,10307,2511,2528,6281,11642,8624,3713,7606,9301,7579,7000,18903,16738,5942,1116,12603,7462,11744,6553,7953,6983,17270,25802,16910,25335,21196,3335,15505,3383,11397,8494,8871,6253,17343,11813,15155,18883],"future_labels":["2019-01","2019-02","2019-03"],"future_fc":[4139,2726,9691],"MAE":5445,"RMSE":7681},"East":{"history_labels":["2015-01","2015-02","2015-03","2015-04","2015-05","2015-06","2015-07","2015-08","2015-09","2015-10","2015-11","2015-12","2016-01","2016-02","2016-03","2016-04","2016-05","2016-06","2016-07","2016-08","2016-09","2016-10","2016-11","2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12"],"history_sales":[436,200,5458,3055,7250,10759,3403,4582,25293,8945,33573,24698,4564,6463,3468,7779,7309,7443,11716,9384,29401,6302,34725,24672,4860,3150,16765,17770,22258,11188,8524,8692,20199,15065,22637,27404,5383,4969,7691,9251,6119,14917,12322,20742,31520,32295,45634,19285],"future_labels":["2019-01","2019-02","2019-03"],"future_fc":[6905,5537,9807],"MAE":13388,"RMSE":14466},"South":{"history_labels":["2015-01","2015-02","2015-03","2015-04","2015-05","2015-06","2015-07","2015-08","2015-09","2015-10","2015-11","2015-12","2016-01","2016-02","2016-03","2016-04","2016-05","2016-06","2016-07","2016-08","2016-09","2016-10","2016-11","2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12"],"history_sales":[9297,2029,32911,12069,5779,4560,1829,6770,7175,4814,7385,8756,4966,1157,10322,5718,1984,7354,2197,5585,13592,4086,7796,5320,4082,15613,4238,2966,11960,3456,6562,3050,12023,3091,15597,10897,4816,2183,6644,9448,10944,8934,2865,10372,10183,12137,28431,15210],"future_labels":["2019-01","2019-02","2019-03"],"future_fc":[8955,5309,2362],"MAE":12132,"RMSE":13917},"West":{"history_labels":["2015-01","2015-02","2015-03","2015-04","2015-05","2015-06","2015-07","2015-08","2015-09","2015-10","2015-11","2015-12","2016-01","2016-02","2016-03","2016-04","2016-05","2016-06","2016-07","2016-08","2016-09","2016-10","2016-11","2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12"],"history_sales":[2939,1058,11009,9070,6570,9629,21809,12743,14901,8729,23045,24406,6027,1804,12268,9015,12043,5089,7090,12548,12563,13623,13826,27813,3658,3100,17559,10482,10694,18527,15281,11818,19701,15625,23923,32103,12082,9435,29024,13460,15366,15845,20768,25471,27107,21203,28718,29652],"future_labels":["2019-01","2019-02","2019-03"],"future_fc":[10871,12366,18073],"MAE":1953,"RMSE":2215}}};
+
+// ═══════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════
+let isLight = false;
+
+function getThemeColors() {
+  if (isLight) {
+    return {
+      grid: '#e2e8f0', text: '#64748b',
+      ACCENT:'#2563eb', ACCENT2:'#0891b2', GREEN:'#059669',
+      AMBER:'#d97706', RED:'#dc2626', PURPLE:'#7c3aed', MUTED:'#94a3b8'
+    };
+  }
+  return {
+    grid: '#1e2d4a', text: '#94a3b8',
+    ACCENT:'#3b82f6', ACCENT2:'#06b6d4', GREEN:'#10b981',
+    AMBER:'#f59e0b', RED:'#ef4444', PURPLE:'#8b5cf6', MUTED:'#475569'
+  };
+}
+
+function toggleTheme() {
+  isLight = !isLight;
+  document.documentElement.classList.toggle('light', isLight);
+  document.getElementById('themeLabel').textContent = isLight ? 'Dark Mode' : 'Light Mode';
+  document.getElementById('themeIcon').textContent = isLight ? '🌙' : '☀️';
+  rebuildAllCharts();
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// FORECAST CONTROLS
+// ═══════════════════════════════════════════════
+let fcHorizon = 3;
+function setHorizon(h, btn) {
+  fcHorizon = h;
+  document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updateForecast();
+}
+function onDimChange() {
+  const dim = document.getElementById('dimSelect').value;
+  const ss = document.getElementById('segSelect');
+  ss.innerHTML = '';
+  const keys = dim === 'Category' ? Object.keys(D.cat_seg) : Object.keys(D.reg_seg);
+  keys.forEach(k => { const o = document.createElement('option'); o.value=k; o.textContent=k; ss.appendChild(o); });
+  updateForecast();
+}
+
+function fmt(v) { return '$' + Number(v).toLocaleString('en-US',{maximumFractionDigits:0}); }
+
+// ═══════════════════════════════════════════════
+// CHART REGISTRY
+// ═══════════════════════════════════════════════
+const charts = {};
+function dc(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+// ═══════════════════════════════════════════════
+// BUILD ALL CHARTS
+// ═══════════════════════════════════════════════
+function rebuildAllCharts() {
+  const T = getThemeColors();
+  Chart.defaults.color = T.text;
+  Chart.defaults.borderColor = T.grid;
+
+  buildPage1(T);
+  buildAnomalyCharts(T);
+  buildSegmentCharts(T);
+  updateForecast();
+}
+
+// ── PAGE 1 ──
+function buildPage1(T) {
+  dc('yearlyBar');
+  charts.yearlyBar = new Chart(document.getElementById('yearlyBar'),{
+    type:'bar',
+    data:{
+      labels:D.yearly_labels.map(String),
+      datasets:[{
+        data:D.yearly_sales,
+        backgroundColor:[T.ACCENT+'99',T.ACCENT+'99',T.ACCENT+'bb',T.GREEN+'bb'],
+        borderColor:[T.ACCENT,T.ACCENT,T.ACCENT,T.GREEN],
+        borderWidth:2, borderRadius:6
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:T.grid},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K'}}}}
+  });
+
+  dc('monthlyLine');
+  charts.monthlyLine = new Chart(document.getElementById('monthlyLine'),{
+    type:'line',
+    data:{labels:D.monthly_labels,datasets:[{
+      data:D.monthly_sales,borderColor:T.ACCENT,
+      backgroundColor:T.ACCENT+'18',fill:true,tension:.35,
+      pointRadius:2,pointHoverRadius:5,borderWidth:2
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}}},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12}},y:{grid:{color:T.grid},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K'}}}}
+  });
+
+  const regKeys = Object.keys(D.reg_total);
+  const regColors = [T.ACCENT2,T.ACCENT,T.PURPLE,T.GREEN];
+  dc('regionBar');
+  charts.regionBar = new Chart(document.getElementById('regionBar'),{
+    type:'bar',
+    data:{labels:regKeys,datasets:[{
+      data:regKeys.map(k=>D.reg_total[k]),
+      backgroundColor:regColors.map(c=>c+'bb'),borderColor:regColors,
+      borderWidth:2,borderRadius:6
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:T.grid},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K'}}}}
+  });
+
+  const catKeys = Object.keys(D.cat_total);
+  dc('categoryDonut');
+  charts.categoryDonut = new Chart(document.getElementById('categoryDonut'),{
+    type:'doughnut',
+    data:{labels:catKeys,datasets:[{
+      data:catKeys.map(k=>D.cat_total[k]),
+      backgroundColor:[T.AMBER+'cc',T.ACCENT+'cc',T.GREEN+'cc'],
+      borderColor:[T.AMBER,T.ACCENT,T.GREEN],borderWidth:2
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'bottom',labels:{padding:14,boxWidth:12,color:T.text}},
+        tooltip:{callbacks:{label:c=>' '+c.label+': '+fmt(c.raw)}}}}
+  });
+
+  const scSorted = [...D.clusters].sort((a,b)=>a.total_sales-b.total_sales);
+  const clusterCol = c => c.cluster_name==='Core High-Demand Growth'?T.GREEN:c.cluster_name==='Niche High-Growth'?T.AMBER:c.cluster_name==='Volatile Low-Growth'?T.RED:T.MUTED;
+  dc('subcatBar');
+  charts.subcatBar = new Chart(document.getElementById('subcatBar'),{
+    type:'bar',
+    data:{labels:scSorted.map(c=>c['Sub-Category']),datasets:[{
+      data:scSorted.map(c=>c.total_sales),
+      backgroundColor:scSorted.map(c=>clusterCol(c)+'99'),
+      borderColor:scSorted.map(c=>clusterCol(c)),
+      borderWidth:1,borderRadius:4
+    }]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}}},
+      scales:{x:{grid:{color:T.grid},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K'}},y:{grid:{display:false}}}}
+  });
+}
+
+// ── PAGE 2 FORECAST ──
+function updateForecast() {
+  const T = getThemeColors();
+  const dim = document.getElementById('dimSelect').value;
+  const seg = document.getElementById('segSelect').value;
+  const src = dim==='Category'?D.cat_seg:D.reg_seg;
+  const data = src[seg];
+  if(!data) return;
+
+  document.getElementById('fcMAE').textContent = fmt(data.MAE);
+  document.getElementById('fcRMSE').textContent = fmt(data.RMSE);
+
+  const futureLbls = data.future_labels.slice(0,fcHorizon);
+  const futureFc = data.future_fc.slice(0,fcHorizon);
+  const allLabels = [...data.history_labels,...futureLbls];
+
+  dc('fcChart');
+  charts.fcChart = new Chart(document.getElementById('fcChart'),{
+    type:'line',
+    data:{labels:allLabels,datasets:[
+      {label:'Historical Sales',data:data.history_sales,
+       borderColor:T.ACCENT,backgroundColor:T.ACCENT+'14',fill:true,tension:.35,pointRadius:2,borderWidth:2},
+      {label:`Forecast (${fcHorizon}mo)`,
+       data:[...new Array(data.history_labels.length).fill(null),...futureFc],
+       borderColor:T.GREEN,backgroundColor:T.GREEN+'14',fill:true,
+       tension:.3,borderWidth:2.5,borderDash:[6,3],pointRadius:7,pointBackgroundColor:T.GREEN}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:12,padding:14,color:T.text}},
+        tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.raw)}}},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:14,color:T.text}},
+              y:{grid:{color:T.grid},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K',color:T.text}}}}
+  });
+
+  const fmtMonth = l => {const[y,m]=l.split('-');return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]+' '+y;};
+  document.getElementById('fcTable').innerHTML = futureFc.map((v,i)=>
+    `<div class="fc-cell"><div class="fc-month">${fmtMonth(futureLbls[i])}</div><div class="fc-val">${fmt(v)}</div></div>`
+  ).join('');
+}
+
+// ── PAGE 3 ANOMALY ──
+function buildAnomalyCharts(T) {
+  dc('anomChart');
+  charts.anomChart = new Chart(document.getElementById('anomChart'),{
+    type:'line',
+    data:{labels:D.monthly_labels,datasets:[
+      {label:'Monthly Sales',data:D.monthly_sales,
+       borderColor:T.ACCENT,backgroundColor:T.ACCENT+'10',fill:true,tension:.35,
+       pointRadius:D.anom_flags.map(f=>f?0:2),borderWidth:2},
+      {label:'Anomaly',data:D.monthly_sales.map((v,i)=>D.anom_flags[i]?v:null),
+       borderColor:'transparent',backgroundColor:T.RED,
+       pointRadius:13,pointStyle:'crossRot',pointBorderWidth:3,
+       pointBorderColor:T.RED,showLine:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:12,padding:14,color:T.text}},
+        tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}}},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12,color:T.text}},
+              y:{grid:{color:T.grid},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K',color:T.text}}}}
+  });
+
+  const zscores = [0,-0.85,1.18,-0.19,-1.12,0.52,0.52,-0.63,1.78,-1.14,-0.08,-0.30,0.01,0.35,-1.28,0.96,0.02,-0.45,0.11,0.77,-0.47,-1.40,-0.70,-0.07,-0.69,0.94,0.22,0.44,2.02,0.15,-0.25,-1.59,-1.21,0.69,-1.38,1.60,1.49,-0.45,-0.12,-1.21,-0.93,-0.22,-0.38,1.44,-0.10,1.84,2.16,-1.23];
+  dc('zscoreBar');
+  charts.zscoreBar = new Chart(document.getElementById('zscoreBar'),{
+    type:'bar',
+    data:{labels:D.monthly_labels,datasets:[{
+      data:zscores,
+      backgroundColor:zscores.map(z=>Math.abs(z)>2?T.RED+'dd':Math.abs(z)>1.5?T.AMBER+'99':T.ACCENT+'66'),
+      borderColor:zscores.map(z=>Math.abs(z)>2?T.RED:Math.abs(z)>1.5?T.AMBER:T.ACCENT),
+      borderWidth:1,borderRadius:3
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' z = '+c.raw.toFixed(2)}}},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,color:T.text}},
+              y:{grid:{color:T.grid},min:-3,max:3,ticks:{color:T.text}}}}
+  });
+
+  const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const byMonth = monthNames.map((_,mi)=>{
+    const vals=D.monthly_sales.filter((_,i)=>i%12===mi);
+    return vals.reduce((a,b)=>a+b,0)/vals.length;
+  });
+  dc('seasonalRadar');
+  charts.seasonalRadar = new Chart(document.getElementById('seasonalRadar'),{
+    type:'radar',
+    data:{labels:monthNames,datasets:[{
+      label:'Avg Sales',data:byMonth,
+      borderColor:T.ACCENT2,backgroundColor:T.ACCENT2+'22',
+      pointBackgroundColor:T.ACCENT2,borderWidth:2
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{r:{grid:{color:T.grid},pointLabels:{font:{size:10},color:T.text},
+        ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K',stepSize:20000,color:T.text}}}}
+  });
+}
+
+// ── PAGE 4 SEGMENTS ──
+function buildSegmentCharts(T) {
+  dc('scatterChart');
+  charts.scatterChart = new Chart(document.getElementById('scatterChart'),{
+    type:'bubble',
+    data:{datasets:[
+      {label:'Niche High-Growth',
+       data:D.clusters.filter(c=>c.cluster_name==='Niche High-Growth').map(c=>({x:c.avg_monthly,y:c.volatility_cv,r:Math.sqrt(c.total_sales/800),label:c['Sub-Category']})),
+       backgroundColor:T.AMBER+'99',borderColor:T.AMBER,borderWidth:2},
+      {label:'Stable Low-Demand',
+       data:D.clusters.filter(c=>c.cluster_name==='Stable Low-Demand').map(c=>({x:c.avg_monthly,y:c.volatility_cv,r:Math.sqrt(c.total_sales/800),label:c['Sub-Category']})),
+       backgroundColor:T.MUTED+'99',borderColor:T.MUTED,borderWidth:2},
+      {label:'Core High-Demand Growth',
+       data:D.clusters.filter(c=>c.cluster_name==='Core High-Demand Growth').map(c=>({x:c.avg_monthly,y:c.volatility_cv,r:Math.sqrt(c.total_sales/800),label:c['Sub-Category']})),
+       backgroundColor:T.GREEN+'99',borderColor:T.GREEN,borderWidth:2},
+      {label:'Volatile Low-Growth',
+       data:D.clusters.filter(c=>c.cluster_name==='Volatile Low-Growth').map(c=>({x:c.avg_monthly,y:c.volatility_cv,r:Math.sqrt(c.total_sales/800),label:c['Sub-Category']})),
+       backgroundColor:T.RED+'99',borderColor:T.RED,borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>{const p=c.raw;return ` ${p.label}  Avg: $${Number(p.x).toLocaleString()}  CV: ${p.y.toFixed(2)}`;}}},
+      },
+      scales:{
+        x:{grid:{color:T.grid},title:{display:true,text:'Avg Monthly Sales ($)',color:T.text},
+           ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K',color:T.text}},
+        y:{grid:{color:T.grid},title:{display:true,text:'Volatility (CV)',color:T.text},ticks:{color:T.text}}
+      }}
+  });
+
+  const clusterTotals = {};
+  D.clusters.forEach(c=>{clusterTotals[c.cluster_name]=(clusterTotals[c.cluster_name]||0)+c.total_sales;});
+  const cn = Object.keys(clusterTotals);
+  dc('clusterDonut');
+  charts.clusterDonut = new Chart(document.getElementById('clusterDonut'),{
+    type:'doughnut',
+    data:{labels:cn,datasets:[{
+      data:cn.map(k=>clusterTotals[k]),
+      backgroundColor:[T.AMBER+'cc',T.MUTED+'cc',T.GREEN+'cc',T.RED+'cc'],
+      borderColor:[T.AMBER,T.MUTED,T.GREEN,T.RED],borderWidth:2
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{position:'bottom',labels:{padding:12,boxWidth:12,color:T.text}},
+        tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}}}}
+  });
+}
+
+// ── CLUSTER TABLE ──
+const clusterClass = {'Niche High-Growth':'c0','Stable Low-Demand':'c1','Core High-Demand Growth':'c2','Volatile Low-Growth':'c3'};
+const clusterAction = {'Core High-Demand Growth':'Invest & scale','Stable Low-Demand':'Lean stocking','Niche High-Growth':'Monitor & grow','Volatile Low-Growth':'Watch closely'};
+
+const sortedClusters = [...D.clusters].sort((a,b)=>{
+  const o=['Core High-Demand Growth','Niche High-Growth','Volatile Low-Growth','Stable Low-Demand'];
+  return o.indexOf(a.cluster_name)-o.indexOf(b.cluster_name)||b.total_sales-a.total_sales;
+});
+document.getElementById('clusterTableBody').innerHTML = sortedClusters.map(c=>`
+  <tr>
+    <td><strong>${c['Sub-Category']}</strong></td>
+    <td><span class="cluster-badge ${clusterClass[c.cluster_name]}">${c.cluster_name}</span></td>
+    <td>${fmt(c.total_sales)}</td>
+    <td>${fmt(c.avg_monthly)}</td>
+    <td>${c.volatility_cv.toFixed(3)}</td>
+    <td style="color:${c.trend_slope>0?'var(--green)':'var(--red)'}">${c.trend_slope>0?'+':''}${c.trend_slope.toFixed(1)}</td>
+    <td style="font-size:12px;color:var(--muted)">${clusterAction[c.cluster_name]}</td>
+  </tr>
+`).join('');
+
+// ── INIT ──
+rebuildAllCharts();
+updateForecast();
+</script>
+</body>
+</html>
