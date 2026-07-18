@@ -1,6 +1,5 @@
 """
 Superstore Sales Forecasting & Analytics Dashboard
-Task 7 — Deployment: Interactive Dashboard using Streamlit
 
 Pages:
   1. Sales Overview Dashboard
