@@ -77,23 +77,6 @@ data/
 └── clean.csv
 ```
 
-If `clean.csv` does not exist, update the code to load the correct dataset.
-
-Example:
-
-```python
-df = pd.read_csv("train.csv", parse_dates=["Order Date"])
-```
-
-or
-
-```python
-df = pd.read_csv("clean.csv", parse_dates=["Order Date"])
-```
-
-Make sure the filename exactly matches the file in the repository.
-
-### After Updating
 
 Commit and push your changes:
 
