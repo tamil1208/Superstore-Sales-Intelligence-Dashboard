@@ -40,7 +40,10 @@ pip install -r requirements.txt
 ```bash
 streamlit run app.py
 ```
-
+git add .
+git commit -m "Fix dataset path"
+git push
+```
 The dashboard will open at:
 
 ```
