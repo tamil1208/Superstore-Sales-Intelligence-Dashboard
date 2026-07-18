@@ -1,85 +1,61 @@
 
 
-#  📊 Superstore Sales Intelligence Dashboard
+# 📊 Superstore Sales Intelligence Dashboard 
 
 An end-to-end **Sales Forecasting and Demand Intelligence System** built using **Python, Machine Learning, and Streamlit**. This project analyzes historical Superstore sales data, forecasts future demand, detects anomalies, segments products based on demand, and provides an interactive dashboard to support data-driven business decisions.
 
----
 
-## 🌐 Live Dashboard 
+## 🌐 Live Dashboard
 
-🚀 Explore the interactive dashboard here:
+🚀 Explore the interactive dashboard:
 
-**https://superstore-analytics-app.netlify.app/**
+**Streamlit App:** https://superstore-analytics-app.streamlit.app/
 
----
-
-## 📓 Google Colab
-
-Run the complete project directly in **Google Colab** without installing any software locally.
-
-### 🚀 Open in Google Colab
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1s-TdLNkgoUUQ0b6WKYarN_jcgth7auOk#scrollTo=gxeVFkBh3ljQ)
-
-Or access it directly:
-
-**https://colab.research.google.com/drive/1s-TdLNkgoUUQ0b6WKYarN_jcgth7auOk#scrollTo=gxeVFkBh3ljQ**
-
-### 📚 Notebook Includes
-
-- 📥 Data Loading & Preprocessing
-- 📊 Exploratory Data Analysis (EDA)
-- 📈 Time Series Analysis
-- 🔮 Sales Forecasting (SARIMA, Prophet & XGBoost)
-- 🚨 Anomaly Detection using Isolation Forest
-- 🎯 Product Demand Segmentation using K-Means Clustering
-- 📉 Model Performance Evaluation
-- 📋 Business Insights & Recommendations
+> **Note:** If the Streamlit application is temporarily unavailable, you can explore the complete project using the Google Colab notebook below.
 
 ---
 
-## 📌 Features
+## 🚀 Installation
 
-- 📈 Interactive Sales Performance Dashboard
-- 🔮 3-Month Sales Forecasting
-- 📊 Sales Trend Analysis
-- 🌍 Regional & Category-wise Analysis
-- 🚨 Anomaly Detection using Isolation Forest
-- 🎯 Product Demand Segmentation using K-Means Clustering
-- 📅 Time Series Decomposition
-- 📦 Executive Business Insights
-- 📉 Forecast Comparison Across Models
-- 📊 Interactive Charts with Plotly
+### 1. Clone the Repository
 
----
+```bash
+git clone https://github.com/tamil1208/Superstore-Sales-Intelligence-Dashboard.git
+```
 
-## 🛠️ Tech Stack
+### 2. Navigate to the Project
 
-### Programming Language
-- Python
+```bash
+cd Superstore-Sales-Intelligence-Dashboard
+```
 
-### Data Analysis
-- Pandas
-- NumPy
+### 3. Install Dependencies
 
-### Machine Learning
-- Scikit-learn
-- XGBoost
-- Prophet
-- Statsmodels
+```bash
+pip install -r requirements.txt
+```
 
-### Visualization
-- Plotly
-- Matplotlib
+### 4. Run the Streamlit Application
 
-### Deployment
-- Streamlit
-- Netlify
+```bash
+streamlit run app.py
+```
+
+The dashboard will open at:
+
+```
+http://localhost:8501
+```
 
 ---
 
-## 📂 Project Structure
+## 🔧 Troubleshooting
+
+### FileNotFoundError
+
+If the dashboard loads but no graphs appear, verify that your dataset exists.
+
+Example:
 
 ```text
 Superstore-Sales-Intelligence-Dashboard/
@@ -87,129 +63,68 @@ Superstore-Sales-Intelligence-Dashboard/
 ├── app.py
 ├── requirements.txt
 ├── train.csv
-├── notebooks/
-├── models/
-├── images/
-├── reports/
-└── README.md
+├── clean.csv
+└── ...
 ```
 
----
+or
 
-## 📊 Dashboard Overview
+```text
+data/
+└── clean.csv
+```
 
-The dashboard provides:
+If `clean.csv` does not exist, update the code to load the correct dataset.
 
-- 📈 Sales KPI Overview
-- 📅 Monthly & Yearly Sales Trends
-- 🛍️ Category-wise Performance
-- 🌍 Regional Sales Analysis
-- 🔮 Future Sales Forecast
-- 🎯 Product Demand Segmentation
-- 🚨 Anomaly Detection Report
-- 📊 Interactive Business Visualizations
+Example:
 
----
+```python
+df = pd.read_csv("train.csv", parse_dates=["Order Date"])
+```
 
-## 🤖 Machine Learning Models
+or
 
-| Model | Purpose |
-|-------|---------|
-| SARIMA | Time Series Forecasting |
-| Prophet | Seasonal Sales Forecasting |
-| XGBoost | Machine Learning Forecasting |
-| Isolation Forest | Anomaly Detection |
-| K-Means | Product Demand Segmentation |
+```python
+df = pd.read_csv("clean.csv", parse_dates=["Order Date"])
+```
 
----
+Make sure the filename exactly matches the file in the repository.
 
-## 📈 Business Insights
+### After Updating
 
-This project helps businesses:
-
-- Forecast future sales demand
-- Optimize inventory planning
-- Identify high-demand products
-- Detect unusual sales behavior
-- Improve supply chain decisions
-- Support executive decision-making using data
-
----
-
-## 🚀 Installation
-
-### Clone the Repository
+Commit and push your changes:
 
 ```bash
-git clone https://github.com/tamil1208/Superstore-Sales-Intelligence-Dashboard.git
+git add .
+git commit -m "Fix dataset path"
+git push
 ```
 
-### Navigate to the Project
-
-```bash
-cd Superstore-Sales-Intelligence-Dashboard
-```
-
-### Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Run the Streamlit App
-
-```bash
-streamlit run app.py
-```
+Then redeploy your Streamlit application.
 
 ---
 
 ## 📸 Project Screenshots
 
-Add screenshots of:
+### Dashboard Home
 
-- Dashboard Home
-- Sales Forecast
-- Regional Analysis
-- Demand Segmentation
-- Anomaly Detection
+![Dashboard Home](images/dashboard-home.png)
 
-inside the `images/` folder and reference them here.
+### Sales Forecast
 
-Example:
+![Sales Forecast](images/sales-forecast.png)
 
-Dashboard Preview
+### Regional Analysis
 
-![Dashboard](Dashboard.jpg)
+![Regional Analysis](images/regional-analysis.png)
 
-*Interactive Sales Intelligence Dashboard built with Streamlit, featuring KPI cards, sales trends, forecasting, anomaly detection, and demand segmentation.*
-```
+### Product Demand Segmentation
 
----
+![Demand Segmentation](images/demand-segmentation.png)
 
-## 📊 Dataset
+### Anomaly Detection
 
-- **Dataset:** Superstore Sales Dataset
-- Includes:
-  - Orders
-  - Sales
-  - Profit
-  - Discount
-  - Region
-  - Category
-  - Sub-Category
-  - Shipping Details
-
----
-
-## 🎯 Future Improvements
-
-- Real-time sales data integration
-- Deep Learning forecasting models (LSTM)
-- Customer Segmentation
-- Inventory Optimization
-- Power BI Dashboard
-- Automated Email Reports
+![Anomaly Detection](images/anomaly-detection.png)
 
 ---
 
@@ -220,29 +135,5 @@ Dashboard Preview
 - GitHub: https://github.com/tamil1208
 - LinkedIn: https://www.linkedin.com/in/tamilarasan-a2466b274/
 - Email: tamilarsan538@gmail.com
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Commit your changes.
-4. Push the branch.
-5. Open a Pull Request.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-## ⭐ Support
-
-If you found this project useful, please consider giving it a ⭐ on GitHub. It helps others discover the project and motivates future improvements.
 
 **Thank you for visiting this repository! 🚀**
