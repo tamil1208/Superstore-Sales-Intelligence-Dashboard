@@ -1,5 +1,4 @@
 
-
 # 📊 Superstore Sales Intelligence Dashboard 
 
 An end-to-end **Sales Forecasting and Demand Intelligence System** built using **Python, Machine Learning, and Streamlit**. This project analyzes historical Superstore sales data, forecasts future demand, detects anomalies, segments products based on demand, and provides an interactive dashboard to support data-driven business decisions.
