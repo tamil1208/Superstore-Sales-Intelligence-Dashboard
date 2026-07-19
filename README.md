@@ -62,19 +62,23 @@ Example:
 
 ```text
 Superstore-Sales-Intelligence-Dashboard/
-│
-├── app.py
-├── requirements.txt
-├── train.csv
-├── clean.csv
-└── ...
+  ├── app/
+  │   ├── streamlit_app.py              ✅
+  │   ├── requirements.txt              ✅
+  │   ├── data/                         ✅
+  │   └── artifacts/                    ✅
+  ├── notebook/
+  ├── README.md
+  └── superstore_dashboard.html
 ```
 
 or
 
 ```text
-data/
-└── clean.csv
+cd superstore-forecast-dashboard
+git init && git add . && git commit -m "Superstore dashboard"
+git remote add origin https://github.com/tamil1208/superstore-forecast-dashboard.git
+git branch -M main && git push -u origin main
 ```
 
 
