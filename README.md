@@ -1,4 +1,3 @@
-````markdown
 # 📊 Superstore Sales Intelligence Dashboard
 
 <p align="center">
@@ -12,13 +11,29 @@
 <p align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
-![Streamlit](https://img.shields.io/badge/Streamlit-App-red?style=for-the-badge&logo=streamlit)
-![XGBoost](https://img.shields.io/badge/XGBoost-ML-success?style=for-the-badge)
+![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-150458?style=for-the-badge&logo=pandas)
+![NumPy](https://img.shields.io/badge/NumPy-Scientific%20Computing-013243?style=for-the-badge&logo=numpy)
+![Scikit-learn](https://img.shields.io/badge/Scikit--Learn-ML-F7931E?style=for-the-badge&logo=scikitlearn)
+![XGBoost](https://img.shields.io/badge/XGBoost-Machine%20Learning-success?style=for-the-badge)
+![Prophet](https://img.shields.io/badge/Prophet-Time%20Series-4285F4?style=for-the-badge)
+![Statsmodels](https://img.shields.io/badge/Statsmodels-Statistical%20Modeling-8A2BE2?style=for-the-badge)
+![Plotly](https://img.shields.io/badge/Plotly-Interactive%20Charts-3F4F75?style=for-the-badge&logo=plotly)
+![Matplotlib](https://img.shields.io/badge/Matplotlib-Visualization-11557C?style=for-the-badge)
+![Streamlit](https://img.shields.io/badge/Streamlit-Web%20App-FF4B4B?style=for-the-badge&logo=streamlit)
+![Machine Learning](https://img.shields.io/badge/Machine-Learning-orange?style=for-the-badge)
+![Time Series](https://img.shields.io/badge/Time-Series-blueviolet?style=for-the-badge)
+![Forecasting](https://img.shields.io/badge/Sales-Forecasting-00C853?style=for-the-badge)
+![Anomaly Detection](https://img.shields.io/badge/Anomaly-Detection-red?style=for-the-badge)
+![K-Means](https://img.shields.io/badge/K--Means-Clustering-009688?style=for-the-badge)
+![Isolation Forest](https://img.shields.io/badge/Isolation-Forest-6A1B9A?style=for-the-badge)
+![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)
+![Google Colab](https://img.shields.io/badge/Google-Colab-F9AB00?style=for-the-badge&logo=googlecolab)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Made with Love](https://img.shields.io/badge/Made%20with-❤️-red?style=for-the-badge)
 
 </p>
+```
 
----
 
 ## 🚀 Overview
 
