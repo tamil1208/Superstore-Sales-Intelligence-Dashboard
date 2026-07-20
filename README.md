@@ -160,7 +160,7 @@ GitHub:
 https://github.com/tamil1208
 
 LinkedIn:
-(Add your LinkedIn URL)
+https://www.linkedin.com/in/tamilarasan-a2466b274/
 
 ---
 
